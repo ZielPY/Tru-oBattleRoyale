@@ -2,13 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Contadores Compartidos</title>
+  <title>Truño Battle Royale</title>
   <script type="module">
-    // Importar SDKs de Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // Configuración de tu Firebase (la que me diste)
     const firebaseConfig = {
       apiKey: "AIzaSyC89sdsLE5mcktbHXLoirX2KTP2CT7ylcw",
       authDomain: "trunobattleroyale.firebaseapp.com",
@@ -19,12 +17,10 @@
       measurementId: "G-GP66XWN90B"
     };
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Lista de nombres
-    const nombres = ["Camilo", "Pepa", "Galo", "Hugo", "Ian", "Cristian"];
+    const nombres = ["Hugo", "Ian", "Pepa", "Cristian", "Galo", "Camilo"];
 
     async function initCounters() {
       for (let nombre of nombres) {
@@ -38,17 +34,33 @@
     }
 
     async function incrementar(nombre) {
+      await modificarValor(nombre, 1);
+    }
+
+    async function decrementar(nombre) {
+      await modificarValor(nombre, -1);
+    }
+
+    async function modificarValor(nombre, delta) {
       const ref = doc(db, "contadores", nombre);
       const snap = await getDoc(ref);
-      let valor = 0;
+      let valor = delta;
       if (snap.exists()) {
-        valor = snap.data().valor + 1;
+        valor = snap.data().valor + delta;
+        if (valor < 0) valor = 0; // Evita valores negativos
         await updateDoc(ref, { valor });
       } else {
-        valor = 1;
         await setDoc(ref, { valor });
       }
       document.getElementById("valor-" + nombre).textContent = valor;
+    }
+
+    async function resetearTodos() {
+      for (let nombre of nombres) {
+        const ref = doc(db, "contadores", nombre);
+        await updateDoc(ref, { valor: 0 });
+        document.getElementById("valor-" + nombre).textContent = 0;
+      }
     }
 
     function renderCounter(nombre, valor) {
@@ -59,15 +71,16 @@
         <h2>${nombre}</h2>
         <p id="valor-${nombre}">${valor}</p>
         <button onclick="incrementar('${nombre}')">+1</button>
+        <button onclick="decrementar('${nombre}')">-1</button>
       `;
       container.appendChild(div);
     }
 
-    // Hacer que incrementar sea global (para que funcione en los botones)
     window.incrementar = incrementar;
+    window.decrementar = decrementar;
+    window.resetearTodos = resetearTodos;
 
-    // Iniciar todo
-    initCounters();
+    window.addEventListener('DOMContentLoaded', initCounters);
   </script>
   <style>
     body {
@@ -105,11 +118,19 @@
     button:hover {
       background: #0056b3;
     }
+    #reset {
+      margin-top: 20px;
+      background: #dc3545;
+    }
+    #reset:hover {
+      background: #a71d2a;
+    }
   </style>
 </head>
 <body>
-  <h1>Contadores Compartidos</h1>
+  <h1>Truño Battle Royale</h1>
   <div id="contadores"></div>
+  <button id="reset" onclick="resetearTodos()">Resetear todos</button>
 </body>
 </html>
 
