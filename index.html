@@ -1,177 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Contadores — Camilo, Pepa, Galo, Hugo, Ian, Cristian</title>
+  <meta charset="UTF-8">
+  <title>Contadores Compartidos</title>
+  <script type="module">
+    // Importar SDKs de Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // Configuración de tu Firebase (la que me diste)
+    const firebaseConfig = {
+      apiKey: "AIzaSyC89sdsLE5mcktbHXLoirX2KTP2CT7ylcw",
+      authDomain: "trunobattleroyale.firebaseapp.com",
+      projectId: "trunobattleroyale",
+      storageBucket: "trunobattleroyale.firebasestorage.app",
+      messagingSenderId: "707175140954",
+      appId: "1:707175140954:web:c6f34094d0b2fe4a845263",
+      measurementId: "G-GP66XWN90B"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Lista de nombres
+    const nombres = ["Camilo", "Pepa", "Galo", "Hugo", "Ian", "Cristian"];
+
+    async function initCounters() {
+      for (let nombre of nombres) {
+        const ref = doc(db, "contadores", nombre);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          await setDoc(ref, { valor: 0 });
+        }
+        renderCounter(nombre, snap.exists() ? snap.data().valor : 0);
+      }
+    }
+
+    async function incrementar(nombre) {
+      const ref = doc(db, "contadores", nombre);
+      const snap = await getDoc(ref);
+      let valor = 0;
+      if (snap.exists()) {
+        valor = snap.data().valor + 1;
+        await updateDoc(ref, { valor });
+      } else {
+        valor = 1;
+        await setDoc(ref, { valor });
+      }
+      document.getElementById("valor-" + nombre).textContent = valor;
+    }
+
+    function renderCounter(nombre, valor) {
+      const container = document.getElementById("contadores");
+      const div = document.createElement("div");
+      div.className = "contador";
+      div.innerHTML = `
+        <h2>${nombre}</h2>
+        <p id="valor-${nombre}">${valor}</p>
+        <button onclick="incrementar('${nombre}')">+1</button>
+      `;
+      container.appendChild(div);
+    }
+
+    // Hacer que incrementar sea global (para que funcione en los botones)
+    window.incrementar = incrementar;
+
+    // Iniciar todo
+    initCounters();
+  </script>
   <style>
-    :root{--bg:#0f172a;--card:#0b1220;--accent:#7c3aed;--muted:#94a3b8;--glass: rgba(255,255,255,0.04)}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(180deg,var(--bg),#071028);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .wrap{width:100%;max-width:980px}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    h1{font-size:1.25rem;margin:0}
-    p.lead{margin:0;color:var(--muted);font-size:0.95rem}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-    .card{background:linear-gradient(180deg,var(--card), #061224);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
-    .name{font-weight:700;font-size:1.05rem;margin-bottom:6px}
-    .count{font-size:2.5rem;font-weight:800;letter-spacing:0.5px;margin:6px 0}
-    .controls{display:flex;gap:8px;align-items:center}
-    button{appearance:none;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
-    .btn-inc{background:linear-gradient(90deg,var(--accent),#4f46e5);color:white}
-    .btn-reset{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)}
-    .small{font-size:0.9rem;color:var(--muted)}
-    footer{margin-top:14px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:0.9rem}
-    .actions{display:flex;gap:10px}
-    .btn-ghost{background:transparent;border:1px dashed rgba(255,255,255,0.04);padding:8px 10px;border-radius:8px;color:var(--muted)}
-    @media (max-width:420px){.count{font-size:2rem}}
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f3f3f3;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    #contadores {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .contador {
+      background: white;
+      padding: 20px;
+      margin: 10px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+      width: 150px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap" role="main">
-    <header>
-      <div>
-        <h1>Seis contadores</h1>
-        <p class="lead">Incrementa cada contador de 1 en 1 — los valores se guardan localmente en esta página.</p>
-      </div>
-      <div class="small">Guardado: <strong id="saveState">localStorage</strong></div>
-    </header>
-
-    <section class="grid" id="grid">
-      <!-- tarjetas generadas por JS -->
-    </section>
-
-    <footer>
-      <div class="small">Consejo: los datos se mantienen en el navegador. Si borras datos del navegador se perderán.</div>
-      <div class="actions">
-        <button id="resetAll" class="btn-ghost">Resetear todos</button>
-      </div>
-    </footer>
-  </div>
-
-  <script>
-    (function(){
-      const NAMES = ["Camilo","Pepa","Galo","Hugo","Ian","Cristian"];
-      const grid = document.getElementById('grid');
-
-      function keyFor(name){ return 'contador_' + name; }
-
-      function getCount(name){
-        const k = keyFor(name);
-        const raw = localStorage.getItem(k);
-        const v = raw === null ? 0 : Number(raw);
-        return Number.isFinite(v) ? v : 0;
-      }
-
-      function saveCount(name, value){
-        localStorage.setItem(keyFor(name), String(value));
-      }
-
-      function createCard(name){
-        const card = document.createElement('article');
-        card.className = 'card';
-
-        const title = document.createElement('div');
-        title.className = 'name';
-        title.textContent = name;
-
-        const count = document.createElement('div');
-        count.className = 'count';
-        count.id = 'count_' + name;
-        count.textContent = getCount(name);
-
-        const controls = document.createElement('div');
-        controls.className = 'controls';
-
-        const incBtn = document.createElement('button');
-        incBtn.className = 'btn-inc';
-        incBtn.type = 'button';
-        incBtn.title = 'Incrementar 1';
-        incBtn.textContent = '+1';
-
-        const resetBtn = document.createElement('button');
-        resetBtn.className = 'btn-reset';
-        resetBtn.type = 'button';
-        resetBtn.title = 'Poner a 0';
-        resetBtn.textContent = 'Reset';
-
-        const note = document.createElement('div');
-        note.className = 'small';
-        note.textContent = 'Persistente en este navegador';
-
-        incBtn.addEventListener('click', ()=>{
-          const current = getCount(name);
-          const updated = current + 1;
-          count.textContent = updated;
-          saveCount(name, updated);
-        });
-
-        // Support keyboard: Space / Enter on focused incBtn
-        incBtn.addEventListener('keydown', (e)=>{
-          if(e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            incBtn.click();
-          }
-        });
-
-        resetBtn.addEventListener('click', ()=>{
-          if(!confirm(`¿Resetear ${name} a 0?`)) return;
-          saveCount(name, 0);
-          count.textContent = 0;
-        });
-
-        controls.appendChild(incBtn);
-        controls.appendChild(resetBtn);
-
-        card.appendChild(title);
-        card.appendChild(count);
-        card.appendChild(controls);
-        card.appendChild(note);
-
-        return card;
-      }
-
-      // generar UI
-      NAMES.forEach(name => grid.appendChild(createCard(name)));
-
-      // reset all
-      document.getElementById('resetAll').addEventListener('click', ()=>{
-        if(!confirm('¿Resetear todos los contadores a 0? Esto no se puede deshacer.')) return;
-        NAMES.forEach(name => {
-          localStorage.setItem(keyFor(name), '0');
-          const el = document.getElementById('count_' + name);
-          if(el) el.textContent = '0';
-        });
-      });
-
-      // Small UX: allow clicking and holding +1 to increment repeatedly
-      let holdInterval = null;
-      grid.addEventListener('pointerdown', (ev)=>{
-        const btn = ev.target.closest('button.btn-inc');
-        if(!btn) return;
-        ev.preventDefault();
-        const name = btn.closest('.card').querySelector('.name').textContent;
-        // single immediate click handled by click handler; start interval after 500ms
-        holdInterval = setTimeout(()=>{
-          holdInterval = setInterval(()=>{
-            const curr = getCount(name);
-            const next = curr + 1;
-            saveCount(name, next);
-            const el = document.getElementById('count_' + name);
-            if(el) el.textContent = next;
-          }, 120);
-        }, 450);
-      });
-      window.addEventListener('pointerup', ()=>{
-        if(holdInterval){ clearTimeout(holdInterval); clearInterval(holdInterval); holdInterval = null; }
-      });
-
-      // accessibility: focus style for buttons
-      document.addEventListener('keyup', (e)=>{
-        if(e.key === 'Escape') document.activeElement.blur();
-      });
-
-    })();
-  </script>
+  <h1>Contadores Compartidos</h1>
+  <div id="contadores"></div>
 </body>
 </html>
+
